@@ -43,7 +43,7 @@ afterEvaluate { project ->
               }
 
               pom.project {
-                 name repo
+                 name projectTitle
                  packaging 'aar'
                  description projectDesc
                  url htmlUrl

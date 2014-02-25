@@ -20,33 +20,21 @@ apply plugin: 'signing'
 
 
 afterEvaluate { project ->
-  user = null
-  repo = null
-  'git remote -v'.execute(null, project.projectDir).getText().find('.*?git@github.com/(.*?)/(.*?) .*?') {
-      match ->
-          user = match[1]
-          repo = match[2]
-  }
-
-  githubUrl = 'https://api.github.com/repos/' + user + '/' + repo;
-  if (System.getenv().GITHUB_TOKEN)
-    githubUrl += '?access_token=' + System.getenv().GITHUB_TOKEN
-  repoInfo = new groovy.json.JsonSlurper().parseText(new URL(githubUrl).getText())
 
   android_manifest = new XmlParser(false, false).parseText(new File(project.projectDir, 'AndroidManifest.xml').getText())
   versionName = android_manifest.'@android:versionName'
   package_name = android_manifest.'@package'
-  artifact_id = repo.toLowerCase()
+  artifact_id = artifactName
   project.version = versionName
-  project.group = package_name
+  project.group = artifactGroupId
 
   uploadArchives {
       repositories {
           mavenDeployer {
 
               beforeDeployment { MavenDeployment deployment -> signPom(deployment) }
-              pom.groupId = package_name
-              pom.artifactId = artifact_id
+              pom.groupId = artifactGroupId
+              pom.artifactId = artifactName
               pom.version = versionName
 
               repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
@@ -55,14 +43,14 @@ afterEvaluate { project ->
 
               pom.project {
                  name repo
-                 packaging 'jar'
-                 description repoInfo.description
-                 url repoInfo.html_url
+                 packaging 'aar'
+                 description projectDesc
+                 url htmlUrl
 
                  scm {
-                     url repoInfo.git_url
-                     connection repoInfo.git_url
-                     developerConnection repoInfo.ssh_url
+                     url gitUrl
+                     connection gitUrl
+                     developerConnection sshUrl
                  }
 
                  licenses {
@@ -75,8 +63,8 @@ afterEvaluate { project ->
 
                  developers {
                      developer {
-                         id user
-                         name user
+                         id devId
+                         name devName
                      }
                  }
              }
